@@ -77,11 +77,28 @@ class Api::DecksController < ApplicationController
 
     raise 'unauthorized' if found_deck.user_id != @current_user.id
 
-    permitted_params = params.permit(:name, :description, { card_blocks: [:id, :quantity]})
+    permitted_params = params.permit(:name, :description, :affiliation_id, { card_blocks: [:id, :quantity]})
     found_deck.update_from_json!(permitted_params)
 
     respond_to do |format|
       format.json { render json: found_deck.detailed_json }
+    end
+  end
+
+  # DELETE api/decks/:id
+  # Must be authenticated, which means @current_user should be set prior to this
+  # Returns a 204 status with no content on a successful deletion
+
+  def destroy
+    # Note that this will raise if the deck isn't found, which will return a 404
+    found_deck = Deck.find(params[:id])
+
+    raise 'unauthorized' if found_deck.user_id != @current_user.id
+
+    found_deck.destroy!
+
+    respond_to do |format|
+      format.json { render json: { message: 'success' }, status: :ok }
     end
   end
 
